@@ -175,14 +175,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     button: {
-        backgroundColor: '#007BFF',
+        backgroundColor: '#9367D6',
         padding: 15,
         borderRadius: 10,
         marginTop: 20,
         alignItems: 'center',
     },
     buttonBack: {
-        backgroundColor: '#FF5C5C',
+        backgroundColor: '#9367D6',
         padding: 15,
         borderRadius: 10,
         marginTop: 20,
