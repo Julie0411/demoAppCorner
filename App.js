@@ -55,7 +55,7 @@ const Form = () => {
 
         try {
             const response = await fetch(
-                `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&key=AIzaSyAaPDX1xOhBybIZTDxKFJOu54gJX2648Zw&types=address`
+                `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&key=YOUR_API_KEY=address`
             );
             const data = await response.json();
 
