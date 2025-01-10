@@ -1,5 +1,5 @@
 import React, { useState, createContext, useContext } from 'react';
-import { StyleSheet, TextInput, Text, View, TouchableWithoutFeedback, Keyboard, ScrollView } from 'react-native';
+import { StyleSheet, TextInput, Text, View, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 
 const UserInfoContext = createContext();
@@ -12,6 +12,7 @@ const Interfaccia = () => {
     const [email, setEmail] = useState('');
     const [numeroTelefono, setNumeroTelefono] = useState('');
     const [showOutput, setShowOutput] = useState(false);
+    const [validationResponse, setValidationResponse] = useState('');
 
     return (
         <UserInfoContext.Provider
@@ -22,7 +23,8 @@ const Interfaccia = () => {
                 indirizzo, setIndirizzo,
                 email, setEmail,
                 numeroTelefono, setNumeroTelefono,
-                showOutput, setShowOutput
+                showOutput, setShowOutput,
+                validationResponse, setValidationResponse
             }}
         >
             <SafeAreaProvider>
@@ -42,12 +44,38 @@ const Form = () => {
         indirizzo, setIndirizzo,
         email, setEmail,
         numeroTelefono, setNumeroTelefono,
-        setShowOutput
+        setShowOutput,
+        setValidationResponse
     } = useContext(UserInfoContext);
 
+    const handleAddressChange = async (text) => {
+        setIndirizzo(text);
+
+        if (text.length < 3) return;
+
+        try {
+            const response = await fetch(
+                `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&key=AIzaSyAaPDX1xOhBybIZTDxKFJOu54gJX2648Zw&types=address`
+            );
+            const data = await response.json();
+
+            if (data.predictions && data.predictions.length > 0) {
+                const fullAddress = data.predictions[0].description;
+                setValidationResponse(fullAddress);
+            } else {
+                setValidationResponse('Nessun indirizzo trovato');
+            }
+        } catch (error) {
+            console.error('Errore durante la query:', error);
+        }
+    };
+
     return (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+        >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
                 <View style={styles.formContainer}>
                     <Text style={styles.title}>Inserisci i tuoi dati</Text>
                     <Text style={styles.label}>Nome:</Text>
@@ -72,7 +100,6 @@ const Form = () => {
                     <TextInput
                         style={styles.input}
                         value={indirizzo}
-                        onChangeText={setIndirizzo}
                     />
                     <Text style={styles.label}>Email:</Text>
                     <TextInput
@@ -93,21 +120,13 @@ const Form = () => {
                         </View>
                     </TouchableWithoutFeedback>
                 </View>
-            </ScrollView>
-        </TouchableWithoutFeedback>
+            </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
     );
 };
 
 const Output = () => {
-    const {
-        name,
-        cognome,
-        nazionalita,
-        indirizzo,
-        email,
-        numeroTelefono,
-        setShowOutput
-    } = useContext(UserInfoContext);
+    const { name, cognome, nazionalita, email, numeroTelefono, validationResponse, setShowOutput} = useContext(UserInfoContext);
 
     return (
         <View style={styles.outputContainer}>
@@ -119,11 +138,12 @@ const Output = () => {
             <Text style={styles.outputText}>La tua nazionalità:</Text>
             <Text style={styles.outputBold}>{nazionalita}</Text>
             <Text style={styles.outputText}>Il tuo indirizzo:</Text>
-            <Text style={styles.outputBold}>{indirizzo}</Text>
+            <Text style={styles.outputBold}>{validationResponse}</Text>
             <Text style={styles.outputText}>La tua email:</Text>
             <Text style={styles.outputBold}>{email}</Text>
             <Text style={styles.outputText}>Il tuo numero di telefono:</Text>
             <Text style={styles.outputBold}>{numeroTelefono}</Text>
+
             <TouchableWithoutFeedback onPress={() => setShowOutput(false)}>
                 <View style={styles.buttonBack}>
                     <Text style={styles.buttonText}>Torna Indietro</Text>
@@ -147,6 +167,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 15,
         padding: 20,
+        marginHorizontal: 15,
+        marginTop: 50,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
@@ -222,7 +244,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#333',
         marginBottom: 10,
-    },
+    }
 });
 
 export default Interfaccia;
